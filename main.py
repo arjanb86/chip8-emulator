@@ -1,0 +1,298 @@
+import pygame
+import tests
+import chip8
+
+pygame.init()
+
+# Scherminstellingen
+SCHAAL = 10
+SCHERM_BREEDTE = 64
+SCHERM_HOOGTE = 32
+
+pygame_scherm = pygame.display.set_mode((
+    SCHERM_BREEDTE * SCHAAL,
+    SCHERM_HOOGTE * SCHAAL
+))
+
+# CHIP-8 Toetsenbord
+toets_koppeling = {
+    pygame.K_1: 0x01,
+    pygame.K_2: 0x02,
+    pygame.K_3: 0x03,
+    pygame.K_4: 0x0C,
+    pygame.K_q: 0x04,
+    pygame.K_w: 0x05,
+    pygame.K_e: 0x06,
+    pygame.K_r: 0x0D,
+    pygame.K_a: 0x07,
+    pygame.K_s: 0x08,
+    pygame.K_d: 0x09,
+    pygame.K_f: 0x0E,
+    pygame.K_z: 0x0A,
+    pygame.K_x: 0x00,
+    pygame.K_c: 0x0B,
+    pygame.K_v: 0x0F
+}
+
+# ==========================================
+# Configuratie en beginwaarden
+# ==========================================
+# Scherm initialiseren
+scherm = [[0 for x in range(SCHERM_BREEDTE)] for y in range(SCHERM_HOOGTE)]
+
+laatste_timer_update = pygame.time.get_ticks()
+
+# ==========================================
+# Hulpfuncties
+# ==========================================
+huidige_tijd = pygame.time.get_ticks()
+verstreken_tijd = huidige_tijd - laatste_timer_update
+
+intervallen = chip8.update_timers(verstreken_tijd)
+
+laatste_timer_update += intervallen * (1000 / 60)
+
+def toon_status():
+    print("V0:", chip8.registers[0])
+    print("V1:", chip8.registers[1])
+    print("V2:", chip8.registers[2])
+    print("VF:", chip8.registers[15])
+    print("I:", chip8.I)
+
+    #toon_geheugen(START_ADRES, len(programma))
+
+def toon_geheugen(adres, aantal):
+    for i in range(adres, adres + aantal):
+        print(chip8.geheugen[i])
+
+def teken_rechthoek(start_x, start_y, breedte, hoogte):
+    for y in range(start_y, start_y + hoogte):
+        for x in range(start_x, start_x + breedte):
+            scherm[y][x] = 1
+
+def toon_scherm():
+    for rij in scherm:
+        for pixel in rij:
+            if pixel == 1:
+                teken = "#"
+            else:
+                teken = " "
+
+            print(teken, end="")
+
+        print()
+
+def wis_scherm():
+    for y in range(SCHERM_HOOGTE):
+        for x in range(SCHERM_BREEDTE):
+            scherm[y][x] = 0
+
+def teken_sprite(start_x, start_y, N):
+    chip8.registers[15] = 0
+
+    for y in range(N):
+        sprite_byte = chip8.geheugen[chip8.I + y]
+
+        for x in range(8):
+            bit = (sprite_byte >> (7 - x)) & 1
+
+            scherm_y = (start_y + y) % SCHERM_HOOGTE
+            scherm_x = (start_x + x) % SCHERM_BREEDTE
+
+            if scherm[scherm_y][scherm_x] == 1 and bit == 1:
+                chip8.registers[15] = 1
+
+            scherm[scherm_y][scherm_x] ^= bit
+
+def druk_toets_in(toets):
+    chip8.toetsen[toets] = 1
+    print("CHIP-8 toets ingedrukt:", toets)
+
+def laat_toets_los(toets):
+    chip8.toetsen[toets] = 0
+    print("CHIP-8 toets losgelaten:", toets)
+
+# ==========================================
+# Geheugen en programma laden
+# ==========================================
+chip8.geheugen[200] = 0x00
+chip8.geheugen[201] = 0xEE
+
+programma = [
+    0x20, 0xC8,
+    0x61, 0x0A,
+    0x62, 0x0B
+]
+
+print(hex(chip8.geheugen[1024]))
+print(hex(chip8.geheugen[1025]))
+
+TEST_EINDE = chip8.START_ADRES + len(programma)
+
+for i, byte in enumerate(programma):
+    chip8.geheugen[chip8.START_ADRES + i] = byte
+
+pc = chip8.START_ADRES
+
+# ==========================================
+# Test scenario's
+# ==========================================
+chip8.I = 300
+
+def test_8xy4_scenario(begin_v1, begin_v2, eind_v1, verwacht_vf):
+    chip8.registers = [0] * 16
+    chip8.registers[1] = begin_v1
+    chip8.registers[2] = begin_v2
+
+    pc = chip8.START_ADRES
+
+    assert chip8.registers[0xF] == 0
+
+    pc = chip8.voer_instructie_uit(0x8124, pc)
+
+    assert chip8.registers[1] == eind_v1, "V1 bevat niet de verwachte waarde"
+    assert chip8.registers[2] == begin_v2, "V2 bevat niet de verwachte waarde"
+    assert chip8.registers[0xF] == verwacht_vf, "VF bevat niet de verwachte waarde"
+    assert pc == 514
+
+def test_8xy5_scenario(begin_v1, begin_v2, eind_v1, verwacht_vf):
+    chip8.registers = [0] * 16
+    chip8.registers[1] = begin_v1
+    chip8.registers[2] = begin_v2
+
+    pc = chip8.START_ADRES
+
+    assert chip8.registers[0xF] == 0
+
+    pc = chip8.voer_instructie_uit(0x8125, pc)
+
+    assert chip8.registers[1] == eind_v1, "V1 bevat niet de verwachte waarde"
+    assert chip8.registers[2] == begin_v2, "V2 bevat niet de verwachte waarde"
+    assert chip8.registers[0xF] == verwacht_vf, "VF bevat niet de verwachte waarde"
+    assert pc == 514
+
+def test_8xy7_scenario(begin_v1, begin_v2, eind_v1, verwacht_vf):
+    chip8.registers = [0] * 16
+    chip8.registers[1] = begin_v1
+    chip8.registers[2] = begin_v2
+
+    pc = chip8.START_ADRES
+
+    assert chip8.registers[0xF] == 0
+
+    pc = chip8.voer_instructie_uit(0x8127, pc)
+
+    assert chip8.registers[1] == eind_v1, "V1 bevat niet de verwachte waarde"
+    assert chip8.registers[2] == begin_v2, "V2 bevat niet de verwachte waarde"
+    assert chip8.registers[0xF] == verwacht_vf, "VF bevat niet de verwachte waarde"
+    assert pc == 514
+
+def test_8xy7():
+    scenario_s = [
+    (8, 20, 12, 1),
+    (20, 8, 244, 0),
+    (20, 20, 0, 1)
+    ]
+    for begin_v1, begin_v2, eind_v1, verwacht_vf in scenario_s:
+        test_8xy7_scenario(begin_v1, begin_v2, eind_v1, verwacht_vf)
+
+def run_tests():
+    test_geslaagd = 0
+    test_mislukt = 0
+
+    tests = [
+        test_8xy7
+    ]
+
+    for test in tests:
+        try:
+            test()
+            test_geslaagd += 1
+            print(test.__name__, "gelukt!")
+        except AssertionError as fout:
+            test_mislukt += 1
+            print(test.__name__, "mislukt!", fout)
+
+    tests_uitgevoerd = test_geslaagd + test_mislukt
+    print("Tests uitgevoerd: ", tests_uitgevoerd)
+    print("Tests geslaagd: ", test_geslaagd)
+    print("Tests mislukt: ", test_mislukt)
+
+# ==========================================
+# Programma uitvoeren
+# ==========================================
+emulator_actief = True
+pygame_actief = True
+aantal_instructies = 0
+max_instructies = 20
+wit = (255,255,255)
+
+klok = pygame.time.Clock()
+
+
+while pygame_actief:
+    for gebeurtenis in pygame.event.get():
+        if gebeurtenis.type == pygame.QUIT:
+            pygame_actief = False
+            break
+        elif gebeurtenis.type == pygame.KEYDOWN:
+            if gebeurtenis.key in toets_koppeling:
+                chip8_toets = toets_koppeling[gebeurtenis.key]
+                if chip8.toetsen[chip8_toets] == 0:
+                    druk_toets_in(chip8_toets)
+                    chip8.nieuwe_toets[chip8_toets] = 1
+
+        elif gebeurtenis.type == pygame.KEYUP:
+            if gebeurtenis.key in toets_koppeling:
+                chip8_toets = toets_koppeling[gebeurtenis.key]
+                laat_toets_los(chip8_toets)
+
+    if emulator_actief:
+        try:
+            if pc >= TEST_EINDE:
+                emulator_actief = False
+
+            elif aantal_instructies >= max_instructies:
+                emulator_actief = False
+
+            else:
+                instructie = chip8.haal_instructie_op(pc)
+
+                print("PC: ", pc, "| Instructie: ", hex(instructie))
+
+                pc = chip8.voer_instructie_uit(instructie, pc, teken_sprite, wis_scherm)
+                aantal_instructies += 1
+        except ValueError as fout:
+            print(f"Emulator gestopt: {fout}")
+            emulator_actief = False
+
+    pygame_scherm.fill((0, 0, 0))
+    for y in range(SCHERM_HOOGTE):
+        for x in range(SCHERM_BREEDTE):
+            if scherm[y][x] == 1:
+                pygame.draw.rect(pygame_scherm, wit, (x * SCHAAL, y * SCHAAL, SCHAAL, SCHAAL))
+
+    pygame.display.flip()
+    klok.tick(2)
+    chip8.update_timers(verstreken_tijd)
+
+
+pygame.quit()
+
+##########################################
+
+print(chip8.stack)
+print(pc)
+print(chip8.registers[1])
+print(chip8.registers[2])
+
+
+# 1NNN — springen naar een adres
+# 3XNN — sla volgende instructie over als VX gelijk is aan NN
+# 6XNN — een waarde in een register zetten
+# 7XNN — een waarde bij een register optellen
+# 8XY0 — een register kopiëren
+# 8XY4 — twee registers optellen
+# 8XY5 — registers aftrekken, inclusief VF.
+# 8XY6 — bits naar rechts verschuiven.
+# 8XYE — bits naar links verschuiven.
