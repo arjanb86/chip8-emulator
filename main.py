@@ -115,17 +115,12 @@ def laat_toets_los(toets):
 # ==========================================
 # Geheugen en programma laden
 # ==========================================
-chip8.geheugen[200] = 0x00
-chip8.geheugen[201] = 0xEE
 
 programma = [
     0x20, 0xC8,
     0x61, 0x0A,
     0x62, 0x0B
 ]
-
-print(hex(chip8.geheugen[1024]))
-print(hex(chip8.geheugen[1025]))
 
 TEST_EINDE = chip8.START_ADRES + len(programma)
 
