@@ -24,17 +24,17 @@ def laad_rom(bestandsnaam):
         with open(bestandsnaam, "rb") as bestand:
             rom = bestand.read()
     except FileNotFoundError:
-        return False
+        return False, 0
 
     beschikbaar_geheugen = len(geheugen) - START_ADRES
 
     if len(rom) > beschikbaar_geheugen:
-        return False
+        return False, 0
 
     for i, byte in enumerate(rom):
         geheugen[START_ADRES + i] = byte
     
-    return True
+    return True, len(rom)
 
 def haal_instructie_op(adres):
     byte1 = geheugen[adres]

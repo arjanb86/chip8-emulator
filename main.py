@@ -116,7 +116,7 @@ def laat_toets_los(toets):
 # Geheugen en programma laden
 # ==========================================
 
-gelukt = chip8.laad_rom("C:/Development/Python/Chip8-emulator/roms/test2.ch8")
+gelukt, rom_lengte = chip8.laad_rom("C:/Development/Python/Chip8-emulator/roms/rom1.ch8")
 if gelukt:
     print("ROM succesvol geladen!")
 else:
@@ -126,6 +126,7 @@ programma = [
 
 ]
 
+rom_einde = chip8.START_ADRES + rom_lengte
 TEST_EINDE = chip8.START_ADRES + len(programma)
 
 for i, byte in enumerate(programma):
@@ -169,19 +170,13 @@ while pygame_actief:
 
     if emulator_actief:
         try:
-            if pc >= TEST_EINDE:
-                emulator_actief = False
-
-            elif aantal_instructies >= max_instructies:
-                emulator_actief = False
-
-            else:
                 instructie = chip8.haal_instructie_op(pc)
 
                 print("PC: ", pc, "| Instructie: ", hex(instructie))
 
                 pc = chip8.voer_instructie_uit(instructie, pc, teken_sprite, wis_scherm)
-                aantal_instructies += 1
+                print("V0: ", chip8.registers[0])
+
         except ValueError as fout:
             print(f"Emulator gestopt: {fout}")
             emulator_actief = False
