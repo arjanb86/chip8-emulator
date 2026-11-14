@@ -17,6 +17,22 @@ sound_timer = 0
 
 fx0a_wacht = False
 
+
+def laad_rom(bestandsnaam):
+
+    with open(bestandsnaam, "rb") as bestand:
+        rom = bestand.read()
+
+    beschikbaar_geheugen = len(geheugen) - START_ADRES
+
+    if len(rom) > beschikbaar_geheugen:
+        return False
+
+    for i, byte in enumerate(rom):
+        geheugen[START_ADRES + i] = byte
+    
+    return True
+
 def haal_instructie_op(adres):
     byte1 = geheugen[adres]
     byte2 = geheugen[adres + 1]

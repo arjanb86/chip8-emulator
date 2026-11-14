@@ -116,10 +116,11 @@ def laat_toets_los(toets):
 # Geheugen en programma laden
 # ==========================================
 
+gelukt = chip8.laad_rom("C:/Development/Python/Chip8-emulator/roms/test2.ch8")
+print(gelukt)
+
 programma = [
-    0x20, 0xC8,
-    0x61, 0x0A,
-    0x62, 0x0B
+
 ]
 
 TEST_EINDE = chip8.START_ADRES + len(programma)
@@ -197,10 +198,7 @@ pygame.quit()
 
 ##########################################
 
-print(chip8.stack)
-print(pc)
-print(chip8.registers[1])
-print(chip8.registers[2])
+
 
 
 # 1NNN — springen naar een adres
