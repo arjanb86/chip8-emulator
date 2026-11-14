@@ -117,7 +117,10 @@ def laat_toets_los(toets):
 # ==========================================
 
 gelukt = chip8.laad_rom("C:/Development/Python/Chip8-emulator/roms/test2.ch8")
-print(gelukt)
+if gelukt:
+    print("ROM succesvol geladen!")
+else:
+    print("ROM kan niet worden geladen.")
 
 programma = [
 

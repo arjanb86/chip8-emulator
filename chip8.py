@@ -20,8 +20,11 @@ fx0a_wacht = False
 
 def laad_rom(bestandsnaam):
 
-    with open(bestandsnaam, "rb") as bestand:
-        rom = bestand.read()
+    try:
+        with open(bestandsnaam, "rb") as bestand:
+            rom = bestand.read()
+    except FileNotFoundError:
+        return False
 
     beschikbaar_geheugen = len(geheugen) - START_ADRES
 
