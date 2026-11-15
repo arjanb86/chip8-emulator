@@ -35,23 +35,14 @@ toets_koppeling = {
 }
 
 # ==========================================
-# Configuratie en beginwaarden
+# Configuratie
 # ==========================================
 # Scherm initialiseren
 scherm = [[0 for x in range(SCHERM_BREEDTE)] for y in range(SCHERM_HOOGTE)]
 
-laatste_timer_update = pygame.time.get_ticks()
-
 # ==========================================
 # Hulpfuncties
 # ==========================================
-huidige_tijd = pygame.time.get_ticks()
-verstreken_tijd = huidige_tijd - laatste_timer_update
-
-intervallen = chip8.update_timers(verstreken_tijd)
-
-laatste_timer_update += intervallen * (1000 / 60)
-
 def toon_status():
     print("V0:", chip8.registers[0])
     print("V1:", chip8.registers[1])
@@ -116,7 +107,7 @@ def laat_toets_los(toets):
 # Geheugen en programma laden
 # ==========================================
 
-gelukt, rom_lengte = chip8.laad_rom("C:/Development/Python/Chip8-emulator/roms/rom1.ch8")
+gelukt, rom_lengte = chip8.laad_rom("C:/Development/Python/Chip8-emulator/roms/Soccer.ch8")
 if gelukt:
     print("ROM succesvol geladen!")
 else:
@@ -149,7 +140,7 @@ max_instructies = 20
 wit = (255,255,255)
 
 klok = pygame.time.Clock()
-
+laatste_timer_update = pygame.time.get_ticks()
 
 while pygame_actief:
     for gebeurtenis in pygame.event.get():
@@ -170,12 +161,15 @@ while pygame_actief:
 
     if emulator_actief:
         try:
+            for _ in range(8):
                 instructie = chip8.haal_instructie_op(pc)
 
-                print("PC: ", pc, "| Instructie: ", hex(instructie))
+                #print("PC: ", pc, "| Instructie: ", hex(instructie))
 
                 pc = chip8.voer_instructie_uit(instructie, pc, teken_sprite, wis_scherm)
-                print("V0: ", chip8.registers[0])
+                # print(hex(pc), hex(instructie))
+                if chip8.delay_timer > 0:
+                    print("Delay timer:", chip8.delay_timer)
 
         except ValueError as fout:
             print(f"Emulator gestopt: {fout}")
@@ -188,9 +182,14 @@ while pygame_actief:
                 pygame.draw.rect(pygame_scherm, wit, (x * SCHAAL, y * SCHAAL, SCHAAL, SCHAAL))
 
     pygame.display.flip()
-    klok.tick(2)
-    chip8.update_timers(verstreken_tijd)
+    klok.tick(60)
 
+    huidige_tijd = pygame.time.get_ticks()
+    verstreken_tijd = huidige_tijd - laatste_timer_update
+
+    intervallen = chip8.update_timers(verstreken_tijd)
+
+    laatste_timer_update += intervallen * (1000 / 60)
 
 pygame.quit()
 

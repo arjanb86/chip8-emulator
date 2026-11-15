@@ -23,12 +23,15 @@ def laad_rom(bestandsnaam):
     try:
         with open(bestandsnaam, "rb") as bestand:
             rom = bestand.read()
-    except FileNotFoundError:
+
+    except FileNotFoundError as fout: #temp
+        print(fout)
         return False, 0
 
     beschikbaar_geheugen = len(geheugen) - START_ADRES
 
     if len(rom) > beschikbaar_geheugen:
+        print("ROM is te groot:", len(rom)) #temp
         return False, 0
 
     for i, byte in enumerate(rom):
@@ -52,9 +55,15 @@ def voer_instructie_uit(instructie, pc, teken_sprite, wis_scherm):
     register_y = (instructie >> 4) & 0xF
     waarde = instructie & 0xFF
 
+    # if type_instructie == 0xE:
+    #     print("TOETSINSTRUCTIE:", hex(instructie), "PC:", hex(pc))
+
+    # elif type_instructie == 0xF and (instructie & 0xFF) == 0x0A:
+    #     print("WACHT OP TOETS:", hex(instructie), "PC:", hex(pc))
+
     if type_instructie == 1:
         adres = instructie & 0x0FFF
-        print("Sprong naar adres:", hex(adres))
+        #print("Sprong naar adres:", hex(adres))
         return adres
 
     elif type_instructie == 0x2:
@@ -194,6 +203,12 @@ def voer_instructie_uit(instructie, pc, teken_sprite, wis_scherm):
 
     elif type_instructie == 0xF:
         waarde = instructie & 0xFF
+        # print(
+        #     "PC:", hex(pc),
+        #     "| Instructie:", hex(instructie),
+        #     "| X:", register_x,
+        #     "| Registerwaarde:", registers[register_x]
+        # )
 
         if waarde == 0x0A:
             if not fx0a_wacht:
@@ -206,7 +221,7 @@ def voer_instructie_uit(instructie, pc, teken_sprite, wis_scherm):
                 registers[register_x] = toets
                 return pc + 2
             else:
-                return pc 
+                return pc
 
         elif waarde == 0x55:
             for i in range(register_x +1):
