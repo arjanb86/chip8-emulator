@@ -4,6 +4,9 @@ import chip8
 
 pygame.init()
 
+CPU_SNELHEID = 500
+cpu_accumulator = 0.0
+
 # Scherminstellingen
 SCHAAL = 10
 SCHERM_BREEDTE = 64
@@ -107,7 +110,7 @@ def laat_toets_los(toets):
 # Geheugen en programma laden
 # ==========================================
 
-gelukt, rom_lengte = chip8.laad_rom("C:/Development/Python/Chip8-emulator/roms/Soccer.ch8")
+gelukt, rom_lengte = chip8.laad_rom("C:/Development/Python/Chip8-emulator/roms/Pong.ch8")
 if gelukt:
     print("ROM succesvol geladen!")
 else:
@@ -141,7 +144,10 @@ wit = (255,255,255)
 
 klok = pygame.time.Clock()
 laatste_timer_update = pygame.time.get_ticks()
+laatste_cpu_update = pygame.time.get_ticks()
+verstreken_tijd = 0
 
+aantal_instructies_tussen_tekenen = 0
 while pygame_actief:
     for gebeurtenis in pygame.event.get():
         if gebeurtenis.type == pygame.QUIT:
@@ -161,15 +167,21 @@ while pygame_actief:
 
     if emulator_actief:
         try:
-            for _ in range(8):
+            huidige_tijd = pygame.time.get_ticks()
+            cpu_verstreken_tijd = huidige_tijd - laatste_cpu_update
+            laatste_cpu_update = huidige_tijd
+
+            huidige_tijd = pygame.time.get_ticks()
+            verstreken_tijd = huidige_tijd - laatste_timer_update
+
+            cpu_accumulator += CPU_SNELHEID * (cpu_verstreken_tijd / 1000)
+            aantal_instructies = int(cpu_accumulator)
+
+            for _ in range(aantal_instructies):
                 instructie = chip8.haal_instructie_op(pc)
 
-                #print("PC: ", pc, "| Instructie: ", hex(instructie))
-
                 pc = chip8.voer_instructie_uit(instructie, pc, teken_sprite, wis_scherm)
-                # print(hex(pc), hex(instructie))
-                if chip8.delay_timer > 0:
-                    print("Delay timer:", chip8.delay_timer)
+            cpu_accumulator -= aantal_instructies
 
         except ValueError as fout:
             print(f"Emulator gestopt: {fout}")
@@ -184,11 +196,7 @@ while pygame_actief:
     pygame.display.flip()
     klok.tick(60)
 
-    huidige_tijd = pygame.time.get_ticks()
-    verstreken_tijd = huidige_tijd - laatste_timer_update
-
     intervallen = chip8.update_timers(verstreken_tijd)
-
     laatste_timer_update += intervallen * (1000 / 60)
 
 pygame.quit()
