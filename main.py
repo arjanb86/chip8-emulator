@@ -139,7 +139,7 @@ chip8.I = 300
 emulator_actief = True
 pygame_actief = True
 aantal_instructies = 0
-max_instructies = 20
+max_instructies = 20 
 wit = (255,255,255)
 
 klok = pygame.time.Clock()

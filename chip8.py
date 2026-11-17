@@ -8,7 +8,7 @@ registers = [0] * 16
 I = 0
 geheugen = [0] * GEHEUGEN_GROOTTE
 stack = []
-
+ 
 toetsen = [0] * 16
 nieuwe_toets = [0] * 16
 
