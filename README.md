@@ -3,4 +3,4 @@
 
 # Introduction
 
-This is a simple but working CHIP-8 emulator created to learn more about emulation/computer architecture and Python in general.
+This is a simple but working CHIP-8 emulator coded in Python to learn more about emulation/computer architecture and Python in general.
