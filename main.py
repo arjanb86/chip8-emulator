@@ -3,6 +3,7 @@ import tests
 import chip8
 
 pygame.init()
+pygame.display.set_caption("CHIP-8 Emulator")
 
 CPU_SNELHEID = 500
 cpu_accumulator = 0.0
